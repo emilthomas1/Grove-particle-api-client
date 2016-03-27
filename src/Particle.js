@@ -1,13 +1,20 @@
 import request from 'superagent';
 import prefix from 'superagent-prefix';
-import Defaults from './Defaults';
 import EventStream from './EventStream';
 
 class Particle {
 
-  constructor(options = Defaults) {
-    Object.assign(this, options);
-    this.prefix = prefix(this.baseUrl);
+  constructor({
+    baseUrl = 'https://api.particle.io',
+    clientSecret = 'particle-api',
+    clientId = 'particle-api',
+    tokenDuration = 7776000, // 90 days
+  } = {}) {
+    this.baseUrl = baseUrl;
+    this.clientSecret = clientSecret;
+    this.clientId = clientId;
+    this.tokenDuration = tokenDuration;
+    this.prefix = prefix(baseUrl);
   }
 
   /**
@@ -122,7 +129,7 @@ class Particle {
    * @param  {String} [$0.iccid] ICCID of the SIM card used in the Electron
    * @return {Promise}
    */
-  getClaimCode({ auth, iccid = undefined }) {
+  getClaimCode({ auth, iccid }) {
     return this.post('/v1/device_claims', { iccid }, auth);
   }
 
@@ -389,7 +396,7 @@ class Particle {
    * @param  {Boolean} [$0.onlyFeatured=false] Only list featured build targets
    * @return {Promise}
    */
-  listBuildTargets({ auth, onlyFeatured = undefined }) {
+  listBuildTargets({ auth, onlyFeatured }) {
     let query;
     if (onlyFeatured !== undefined) {
       query = { featured: !!onlyFeatured };
@@ -397,7 +404,7 @@ class Particle {
     return this.get('/v1/build_targets', auth, query);
   }
 
-  get(uri, auth, query = undefined) {
+  get(uri, auth, query) {
     return this.request({ uri, auth, method: 'get', query: query });
   }
 
@@ -417,7 +424,7 @@ class Particle {
     return this.request({ uri, data, auth, method: 'delete' });
   }
 
-  request({ uri, method, data = undefined, auth, query = undefined, form = undefined, files = undefined }) {
+  request({ uri, method, data, auth, query, form, files }) {
     return new Promise((fulfill, reject) => {
       const req = request(method, uri);
       req.use(this.prefix);

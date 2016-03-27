@@ -1,7 +1,6 @@
 const should = require('should'); // monkeypatch the world~!1
 
 import Particle from '../src/Particle';
-import Defaults from '../src/Defaults';
 import { createServer } from 'http';
 import sinon from 'sinon';
 import EventStream from '../src/EventStream';
@@ -80,16 +79,19 @@ describe('ParticleAPI', () => {
 
     describe('constructor', () => {
       it('sets the defaults', () => {
-        Object.keys(Defaults).forEach((setting) => {
-          api[setting].should.equal(Defaults[setting]);
-        });
+        api.baseUrl.should.equal('https://api.particle.io');
+        api.clientSecret.should.equal('particle-api');
+        api.clientId.should.equal('particle-api');
+        api.tokenDuration.should.equal(7776000);
       });
     });
+
     describe('.login', () => {
       it('sends credentials', () => {
         return api.login(props).then(Common.expectCredentials);
       });
     });
+
     describe('.createUser', () => {
       it('sends credentials', () => {
         return api.createUser(props).then(({ data }) => {
@@ -98,6 +100,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.removeAccessToken', () => {
       it('sends credentials', () => {
         return api.removeAccessToken(props).then(({ auth }) => {
@@ -105,12 +108,14 @@ describe('ParticleAPI', () => {
           auth.password.should.equal(props.password);
         });
       });
+
       it('generates request', () => {
         return api.removeAccessToken(props).then((results) => {
           results.uri.should.endWith(props.token);
         });
       });
     });
+
     describe('.listAccessTokens', () => {
       it('sends credentials', () => {
         return api.listAccessTokens(props).then(({ auth }) => {
@@ -119,6 +124,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.listDevices', () => {
       it('generates request', () => {
         return api.listDevices({ auth: 'X' }).then((results) => {
@@ -127,11 +133,13 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.getDevice', () => {
       it('generates request', () => {
         return api.getDevice(props).then(Common.expectDeviceUrlAndToken);
       });
     });
+
     describe('.claimDevice', () => {
       it('sends credentials', () => {
         return api.claimDevice(props).then((results) => {
@@ -141,11 +149,13 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.removeDevice', () => {
       it('generates request', () => {
         return api.removeDevice(props).then(Common.expectDeviceUrlAndToken);
       });
     });
+
     describe('.renameDevice', () => {
       it('generates request', () => {
         return api.renameDevice(props).then(Common.expectDeviceUrlAndToken);
@@ -157,6 +167,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.getClaimCode', () => {
       it('generates request', () => {
         return api.getClaimCode({ auth: 'X' }).then((results) => {
@@ -164,6 +175,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.changeProduct', () => {
       it('generates request', () => {
         return api.changeProduct(props).then(Common.expectDeviceUrlAndToken);
@@ -176,6 +188,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.getVariable', () => {
       it('generates request', () => {
         return api.getVariable(props).then(Common.expectDeviceUrlAndToken);
@@ -186,6 +199,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.signalDevice', () => {
       it('generates request', () => {
         return api.signalDevice(props).then(Common.expectDeviceUrlAndToken);
@@ -197,6 +211,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.flashTinker', () => {
       it('generates request', () => {
         return api.flashTinker(props).then(Common.expectDeviceUrlAndToken);
@@ -208,6 +223,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.flashDevice', () => {
       it('generates request', () => {
         return api.flashDevice(props).then(Common.expectDeviceUrlAndToken);
@@ -220,6 +236,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.compileCode', () => {
       it('generates request', () => {
         return api.compileCode(props).then((results) => {
@@ -234,6 +251,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.sendPublicKey', () => {
       it('generates request', () => {
         return api.sendPublicKey(props).then(Common.expectDeviceUrlAndToken);
@@ -257,6 +275,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.callFunction', () => {
       it('generates request', () => {
         return api.callFunction(props).then(Common.expectDeviceUrlAndToken);
@@ -268,6 +287,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.getEventStream', () => {
       before(() => {
         sinon.stub(EventStream.prototype, 'connect', function connect() {
@@ -336,6 +356,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.publishEvent', () => {
       it('sends proper data', () => {
         return api.publishEvent(props).then(({ data }) => {
@@ -345,6 +366,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.createWebhook', () => {
       it('creates for a single device', () => {
         return api.createWebhook(props).then(({ data }) => {
@@ -368,6 +390,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.deleteWebhook', () => {
       it('sends proper data', () => {
         return api.deleteWebhook({ hookId: 'captain' }).then(({ uri }) => {
@@ -375,13 +398,17 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.listWebhooks', () => {
+
       it('generates request', () => {
         return api.listWebhooks(props).then(({ auth }) => {
           auth.should.equal(props.auth);
         });
       });
+
     });
+
     describe('.listBuildTargets', () => {
       it('generates request', () => {
         return api.listBuildTargets(props).then(({ auth, query }) => {
@@ -389,6 +416,7 @@ describe('ParticleAPI', () => {
           should.not.exist(query);
         });
       });
+
       it('passes featured flag', () => {
         const params = { auth: props.auth, onlyFeatured: true };
         return api.listBuildTargets(params).then(({ auth, query }) => {
@@ -397,6 +425,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.validatePromoCode', () => {
       it('generates request', () => {
         return api.validatePromoCode({ auth: 'X', promoCode: '123ABCD' }).then((results) => {
@@ -405,6 +434,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.setUserInfo', () => {
       it('generates request', () => {
         return api.setUserInfo({ auth: 'X', stripeToken: '123ABCD' }).then((results) => {
@@ -413,6 +443,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.activateSIM', () => {
       it('generates request', () => {
         return api.activateSIM({ auth: 'X', countryCode: 'XX', promoCode: '123ABCD', iccid: '1234567890123456789' }).then((results) => {
@@ -421,6 +452,7 @@ describe('ParticleAPI', () => {
         });
       });
     });
+
     describe('.checkSIM', () => {
       it('generates request', () => {
         return api.checkSIM({ auth: 'X', iccid: '1234567890123456789' }).then((results) => {
@@ -432,10 +464,12 @@ describe('ParticleAPI', () => {
   });
 
   describe('#request', () => {
+
     beforeEach(() => {
       server = createServer();
       server.listen(0);
     });
+
     it('generates request', (done) => {
       api.request({
         uri: `http://127.0.0.1:${ server.address().port }`,
@@ -457,6 +491,7 @@ describe('ParticleAPI', () => {
         res.end();
       });
     });
+
     it('reports HTTP error', (done) => {
       api.request({
         uri: `http://127.0.0.1:${ server.address().port }`,
@@ -478,6 +513,7 @@ describe('ParticleAPI', () => {
         res.end();
       });
     });
+
     it('reports network error', (done) => {
       api.request({
         uri: `http://127.0.0.1:${ server.address().port }`,
@@ -493,5 +529,6 @@ describe('ParticleAPI', () => {
         res.socket.destroy();
       });
     });
+
   });
 });
