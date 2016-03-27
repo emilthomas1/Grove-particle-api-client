@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import request from 'superagent';
 import prefix from 'superagent-prefix';
 import Defaults from './Defaults';
