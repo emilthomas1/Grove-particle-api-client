@@ -8,13 +8,13 @@ class Particle {
     baseUrl = 'https://api.particle.io',
     clientSecret = 'particle-api',
     clientId = 'particle-api',
-    tokenDuration = 7776000, // 90 days
+    token,
   } = {}) {
     this.baseUrl = baseUrl;
     this.clientSecret = clientSecret;
     this.clientId = clientId;
-    this.tokenDuration = tokenDuration;
     this.prefix = prefix(baseUrl);
+    this.token = token;
   }
 
   /**
@@ -24,15 +24,19 @@ class Particle {
    * @param  {Number} $0.tokenDuration How long the access token should last in seconds
    * @return {Promise}
    */
-  login({ username, password, tokenDuration = this.tokenDuration }) {
+  login({ username, password, tokenDuration = 7776000 }) { // default to 90 days
     return this.request({ uri: '/oauth/token', form: {
-      username,
-      password,
-      grant_type: 'password',
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      expires_in: tokenDuration,
-    }, method: 'post' });
+        username,
+        password,
+        grant_type: 'password',
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        expires_in: tokenDuration,
+      }, method: 'post' })
+      .then(res => {
+        this.token = res.body.access_token;
+        return res;
+      });
   }
 
   /**
@@ -277,7 +281,7 @@ class Particle {
    * @return {Promise} If the promise resolves, the resolution value will be an EventStream object that will
    * emit 'event' events, as well as the specific named event.
    */
-  getEventStream({ deviceId, name, org, product, auth }) {
+  getEventStream({ deviceId, name, org, product, auth = this.token }) {
     let uri = '/v1/';
     if (org) {
       uri += `orgs/${org}/`;
@@ -424,7 +428,7 @@ class Particle {
     return this.request({ uri, data, auth, method: 'delete' });
   }
 
-  request({ uri, method, data, auth, query, form, files }) {
+  request({ uri, method, data, auth = this.token, query, form, files }) {
     return new Promise((fulfill, reject) => {
       const req = request(method, uri);
       req.use(this.prefix);
@@ -463,7 +467,7 @@ class Particle {
           reject({ statusCode, errorDescription, error, body });
         } else {
           fulfill({
-            body: body,
+            body,
             statusCode: res.statusCode,
           });
         }

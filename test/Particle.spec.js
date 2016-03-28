@@ -82,7 +82,6 @@ describe('ParticleAPI', () => {
         api.baseUrl.should.equal('https://api.particle.io');
         api.clientSecret.should.equal('particle-api');
         api.clientId.should.equal('particle-api');
-        api.tokenDuration.should.equal(7776000);
       });
     });
 
