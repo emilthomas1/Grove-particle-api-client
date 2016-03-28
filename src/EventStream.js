@@ -5,12 +5,11 @@ import url from 'url';
 import { EventEmitter } from 'events';
 
 class EventStream extends EventEmitter {
-  constructor(uri, token, options) {
+  constructor(uri, token, { debug } = {}) {
     super();
     this.uri = uri;
     this.token = token;
-    this.reconnectInterval = 2000;
-    Object.assign(this, options);
+    this.debug = debug;
   }
 
   connect() {
@@ -36,28 +35,29 @@ class EventStream extends EventEmitter {
       }
 
       req.on('error', e => {
-        reject({ error: e, errorDescription: `Network error from ${this.uri}` });
+        reject({
+          error: e,
+          errorDescription: `Network error from ${this.uri}`,
+        });
       });
 
       req.on('response', res => {
-        const statusCode = res.statusCode;
+        const { statusCode } = res;
         if (statusCode !== 200) {
           let body = '';
           res.on('data', chunk => body += chunk);
           res.on('end', () => {
             try {
+              // If the body is JSON parse it and emit that
               body = JSON.parse(body);
-            } catch (e) {}
-            this.emit('response', {
-              statusCode,
-              body
-            });
+            } catch (e) {} // if it's not, no big deal just use original body
+            this.emit('response', { statusCode, body });
             let errorDescription = `HTTP error ${statusCode} from ${this.uri}`;
             if (body && body.error_description) {
               errorDescription += ' - ' + body.error_description;
             }
             reject({ statusCode, errorDescription, body });
-            this.req = undefined;
+            this.req = null;
           });
           return;
         }
@@ -68,7 +68,11 @@ class EventStream extends EventEmitter {
         this.lastEventId;
 
         res.on('data', this.parse.bind(this));
-        res.once('end', this.end.bind(this));
+        res.once('end', () => {
+          this.emit('end');
+          this.req = null;
+          this.removeAllListeners();
+        });
         resolve(this);
       });
       req.end();
@@ -78,19 +82,9 @@ class EventStream extends EventEmitter {
   abort() {
     if (this.req) {
       this.req.abort();
-      this.req = undefined;
+      this.req = null;
     }
     this.removeAllListeners();
-  }
-
-  end() {
-    this.req = undefined;
-    setTimeout(() => {
-      this.connect().catch(err => {
-        this.emit('error', err);
-        this.removeAllListeners();
-      });
-    }, this.reconnectInterval);
   }
 
   parse(chunk) {
@@ -152,7 +146,7 @@ class EventStream extends EventEmitter {
           this.emit('event', event);
           this.data = '';
         }
-        this.eventName = undefined;
+        this.eventName = null;
       } catch (e) {
         // do nothing if JSON.parse fails
       }
